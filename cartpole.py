@@ -48,7 +48,7 @@ builder = DiagramBuilder()
 plant, scene_graph = AddMultibodyPlantSceneGraph(builder, time_step=0.0)
 cartpole = Parser(plant).AddModelFromFile("cart_pole.sdf")
 plant.Finalize()
-# I tried this line but it says the input port is already connected
+# I tried this line but as we can see from the diagram the input port is already connected
 #builder.Connect(scene_graph.get_query_output_port(), plant.get_geometry_query_input_port())
 
 # Setup visualization
@@ -68,7 +68,7 @@ builder.Connect(controller.get_output_port(0),
                 plant.get_actuation_input_port())
 """
 
-# needed for linearizing the diagram
+# This line is only needed when linearizing the whole diagram
 builder.ExportInput(plant.get_actuation_input_port(), "command")
 diagram = builder.Build()
 # Set up a simulator to run this diagram
@@ -81,8 +81,6 @@ plant_context = plant.GetMyContextFromRoot(context)
 # RuntimeError: The object named [] of type drake::systems::Diagram<double> does not support ToAutoDiffXd.
 """
 diag_context = diagram.CreateDefaultContext()
-plot_system_graphviz(diagram)
-plt.show()
 diagram.get_input_port().FixValue(diag_context, [0])
 result = FirstOrderTaylorApproximation(diagram, context)
 """
@@ -100,6 +98,8 @@ result = FirstOrderTaylorApproximation(plant, plant_context,
 """
 
 plant.get_actuation_input_port(cartpole).FixValue(plant_context, np.array([0]))
+plot_system_graphviz(diagram)
+plt.show()
 # Set the initial conditions
 context.SetContinuousState([0, np.pi, 0, 0.00]) # x, theta, xdot, thetadot
 context.SetTime(0.0)
@@ -108,6 +108,5 @@ visualizer.start_recording()
 simulator.AdvanceTo(10.0)
 visualizer.publish_recording()
 visualizer.vis.render_static()
-
 
 input()
